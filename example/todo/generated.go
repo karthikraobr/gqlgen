@@ -3112,7 +3112,7 @@ func (ec *executionContext) unmarshalNbla2ᚕstring(ctx context.Context, v inter
 	var err error
 	res := make([]string, len(vSlice))
 	for i := range vSlice {
-		res[i], err = ec.unmarshalNbla2string(ctx, vSlice[i])
+		res[i], err = ec.unmarshalObla2string(ctx, vSlice[i])
 		if err != nil {
 			return nil, err
 		}
@@ -3123,7 +3123,7 @@ func (ec *executionContext) unmarshalNbla2ᚕstring(ctx context.Context, v inter
 func (ec *executionContext) marshalNbla2ᚕstring(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	for i := range v {
-		ret[i] = ec.marshalNbla2string(ctx, sel, v[i])
+		ret[i] = ec.marshalObla2string(ctx, sel, v[i])
 	}
 
 	return ret

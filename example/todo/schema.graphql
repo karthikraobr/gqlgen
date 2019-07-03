@@ -5,6 +5,8 @@ schema {
 
 type MyQuery {
     todo(id: ID!): Todo
+    todoNew(id: ID!): TodoNew
+    todoNew1(id: ID!): TodoNew1
     lastTodo: Todo
     todos: [Todo!]!
 }
@@ -18,6 +20,17 @@ type Todo {
     id: ID!
     text: String!
     done: Boolean! @hasRole(role: OWNER) # only the owner can see if a todo is done
+}
+
+
+type TodoNew {
+    id: ID!
+    text: [String]!
+}
+
+type TodoNew1 {
+    id: ID!
+    text: [String!]!
 }
 
 "Passed to createTodo to create a new todo"

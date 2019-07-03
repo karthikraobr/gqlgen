@@ -16,16 +16,6 @@ type TodoInput struct {
 	Done *bool `json:"done"`
 }
 
-type TodoNew struct {
-	ID   int       `json:"id"`
-	Text []*string `json:"text"`
-}
-
-type TodoNew1 struct {
-	ID   int      `json:"id"`
-	Text []string `json:"text"`
-}
-
 type Role string
 
 const (

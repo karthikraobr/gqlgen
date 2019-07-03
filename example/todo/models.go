@@ -19,3 +19,13 @@ type User struct {
 	ID   int
 	Name string
 }
+
+type TodoNew struct {
+	ID   int
+	Text []string
+}
+
+type TodoNew1 struct {
+	ID   int
+	Text []string
+}

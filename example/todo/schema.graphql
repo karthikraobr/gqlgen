@@ -25,13 +25,15 @@ type Todo {
 
 type TodoNew {
     id: ID!
-    text: [String]!
+    text: [bla]!
 }
 
 type TodoNew1 {
     id: ID!
-    text: [String!]!
+    text: [bla!]!
 }
+
+scalar bla
 
 "Passed to createTodo to create a new todo"
 input TodoInput {

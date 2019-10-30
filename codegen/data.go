@@ -123,10 +123,7 @@ func BuildData(cfg *config.Config) (*Data, error) {
 		return nil, err
 	}
 
-	s.ReferencedTypes, err = b.buildTypes()
-	if err != nil {
-		return nil, err
-	}
+	s.ReferencedTypes = b.buildTypes()
 
 	sort.Slice(s.Objects, func(i, j int) bool {
 		return s.Objects[i].Definition.Name < s.Objects[j].Definition.Name
@@ -135,6 +132,16 @@ func BuildData(cfg *config.Config) (*Data, error) {
 	sort.Slice(s.Inputs, func(i, j int) bool {
 		return s.Inputs[i].Definition.Name < s.Inputs[j].Definition.Name
 	})
+
+	if b.Binder.SawInvalid {
+		// if we have a syntax error, show it
+		if len(b.Binder.PkgErrors) > 0 {
+			return nil, b.Binder.PkgErrors
+		}
+
+		// otherwise show a generic error message
+		return nil, fmt.Errorf("invalid types were encountered while traversing the go source code, this probably means the invalid code generated isnt correct. add try adding -v to debug")
+	}
 
 	return &s, nil
 }

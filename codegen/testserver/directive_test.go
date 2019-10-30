@@ -3,7 +3,6 @@ package testserver
 import (
 	"context"
 	"fmt"
-	"net/http/httptest"
 	"testing"
 
 	"github.com/99designs/gqlgen/client"
@@ -14,29 +13,38 @@ import (
 
 func TestDirectives(t *testing.T) {
 	resolvers := &Stub{}
+	ok := "Ok"
 	resolvers.QueryResolver.DirectiveArg = func(ctx context.Context, arg string) (i *string, e error) {
-		s := "Ok"
-		return &s, nil
+		return &ok, nil
 	}
 
 	resolvers.QueryResolver.DirectiveInput = func(ctx context.Context, arg InputDirectives) (i *string, e error) {
-		s := "Ok"
-		return &s, nil
+		return &ok, nil
 	}
 
 	resolvers.QueryResolver.DirectiveInputNullable = func(ctx context.Context, arg *InputDirectives) (i *string, e error) {
-		s := "Ok"
-		return &s, nil
+		return &ok, nil
 	}
 
-	resolvers.QueryResolver.DirectiveNullableArg = func(ctx context.Context, arg *int, arg2 *int) (i *string, e error) {
-		s := "Ok"
-		return &s, nil
+	resolvers.QueryResolver.DirectiveNullableArg = func(ctx context.Context, arg *int, arg2 *int, arg3 *string) (*string, error) {
+		return &ok, nil
 	}
 
 	resolvers.QueryResolver.DirectiveInputType = func(ctx context.Context, arg InnerInput) (i *string, e error) {
-		s := "Ok"
-		return &s, nil
+		return &ok, nil
+	}
+
+	resolvers.QueryResolver.DirectiveObject = func(ctx context.Context) (*ObjectDirectives, error) {
+		return &ObjectDirectives{
+			Text:         ok,
+			NullableText: &ok,
+		}, nil
+	}
+
+	resolvers.QueryResolver.DirectiveObjectWithCustomGoModel = func(ctx context.Context) (*ObjectDirectivesWithCustomGoModel, error) {
+		return &ObjectDirectivesWithCustomGoModel{
+			NullableText: ok,
+		}, nil
 	}
 
 	resolvers.QueryResolver.DirectiveField = func(ctx context.Context) (*string, error) {
@@ -47,7 +55,38 @@ func TestDirectives(t *testing.T) {
 		return nil, nil
 	}
 
-	srv := httptest.NewServer(
+	resolvers.QueryResolver.DirectiveDouble = func(ctx context.Context) (*string, error) {
+		return &ok, nil
+	}
+
+	resolvers.QueryResolver.DirectiveUnimplemented = func(ctx context.Context) (*string, error) {
+		return &ok, nil
+	}
+
+	okchan := func() (<-chan *string, error) {
+		res := make(chan *string, 1)
+		res <- &ok
+		close(res)
+		return res, nil
+	}
+
+	resolvers.SubscriptionResolver.DirectiveArg = func(ctx context.Context, arg string) (strings <-chan *string, e error) {
+		return okchan()
+	}
+
+	resolvers.SubscriptionResolver.DirectiveNullableArg = func(ctx context.Context, arg *int, arg2 *int, arg3 *string) (strings <-chan *string, e error) {
+		return okchan()
+	}
+
+	resolvers.SubscriptionResolver.DirectiveDouble = func(ctx context.Context) (strings <-chan *string, e error) {
+		return okchan()
+	}
+
+	resolvers.SubscriptionResolver.DirectiveUnimplemented = func(ctx context.Context) (<-chan *string, error) {
+		return okchan()
+	}
+
+	srv :=
 		handler.GraphQL(
 			NewExecutableSchema(Config{
 				Resolvers: resolvers,
@@ -115,6 +154,16 @@ func TestDirectives(t *testing.T) {
 					Logged: func(ctx context.Context, obj interface{}, next graphql.Resolver, id string) (interface{}, error) {
 						return next(context.WithValue(ctx, "request_id", &id))
 					},
+					ToNull: func(ctx context.Context, obj interface{}, next graphql.Resolver) (interface{}, error) {
+						return nil, nil
+					},
+					Directive1: func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error) {
+						return next(ctx)
+					},
+					Directive2: func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error) {
+						return next(ctx)
+					},
+					Unimplemented: nil,
 				},
 			}),
 			handler.ResolverMiddleware(func(ctx context.Context, next graphql.Resolver) (res interface{}, err error) {
@@ -125,8 +174,8 @@ func TestDirectives(t *testing.T) {
 				path, _ := ctx.Value("path").([]int)
 				return next(context.WithValue(ctx, "path", append(path, 2)))
 			}),
-		))
-	c := client.New(srv.URL)
+		)
+	c := client.New(srv)
 
 	t.Run("arg directives", func(t *testing.T) {
 		t.Run("when function errors on directives", func(t *testing.T) {
@@ -193,6 +242,26 @@ func TestDirectives(t *testing.T) {
 			err := c.Post(`query { directiveFieldDef(ret: "") }`, &resp)
 
 			require.EqualError(t, err, `[{"message":"not valid","path":["directiveFieldDef"]}]`)
+		})
+
+		t.Run("has 2 directives", func(t *testing.T) {
+			var resp struct {
+				DirectiveDouble string
+			}
+
+			c.MustPost(`query { directiveDouble }`, &resp)
+
+			require.Equal(t, "Ok", resp.DirectiveDouble)
+		})
+
+		t.Run("directive is not implemented", func(t *testing.T) {
+			var resp struct {
+				DirectiveUnimplemented string
+			}
+
+			err := c.Post(`query { directiveUnimplemented }`, &resp)
+
+			require.EqualError(t, err, `[{"message":"directive unimplemented is not implemented","path":["directiveUnimplemented"]}]`)
 		})
 
 		t.Run("ok", func(t *testing.T) {
@@ -271,7 +340,7 @@ func TestDirectives(t *testing.T) {
 				DirectiveInputNullable *string
 			}
 
-			err := c.Post(`query { directiveInputNullable(arg: {text:"23",inner:{message:"1"},innerNullable:{message:"success"}}) }`, &resp)
+			err := c.Post(`query { directiveInputNullable(arg: {text:"23",nullableText:"23",inner:{message:"1"},innerNullable:{message:"success"}}) }`, &resp)
 
 			require.Nil(t, err)
 			require.Equal(t, "Ok", *resp.DirectiveInputNullable)
@@ -285,6 +354,89 @@ func TestDirectives(t *testing.T) {
 
 			require.Nil(t, err)
 			require.Equal(t, "Ok", *resp.DirectiveInputType)
+		})
+	})
+	t.Run("object field directives", func(t *testing.T) {
+		t.Run("when function success", func(t *testing.T) {
+			var resp struct {
+				DirectiveObject *struct {
+					Text         string
+					NullableText *string
+				}
+			}
+
+			err := c.Post(`query { directiveObject{ text nullableText } }`, &resp)
+
+			require.Nil(t, err)
+			require.Equal(t, "Ok", resp.DirectiveObject.Text)
+			require.True(t, resp.DirectiveObject.NullableText == nil)
+		})
+		t.Run("when directive returns nil & custom go field is not nilable", func(t *testing.T) {
+			var resp struct {
+				DirectiveObjectWithCustomGoModel *struct {
+					NullableText *string
+				}
+			}
+
+			err := c.Post(`query { directiveObjectWithCustomGoModel{ nullableText } }`, &resp)
+
+			require.Nil(t, err)
+			require.True(t, resp.DirectiveObjectWithCustomGoModel.NullableText == nil)
+		})
+	})
+
+	t.Run("Subscription directives", func(t *testing.T) {
+		t.Run("arg directives", func(t *testing.T) {
+			t.Run("when function errors on directives", func(t *testing.T) {
+				var resp struct {
+					DirectiveArg *string
+				}
+
+				err := c.WebsocketOnce(`subscription { directiveArg(arg: "") }`, &resp)
+
+				require.EqualError(t, err, `[{"message":"invalid length","path":["directiveArg"]}]`)
+				require.Nil(t, resp.DirectiveArg)
+			})
+			t.Run("when function errors on nullable arg directives", func(t *testing.T) {
+				var resp struct {
+					DirectiveNullableArg *string
+				}
+
+				err := c.WebsocketOnce(`subscription { directiveNullableArg(arg: -100) }`, &resp)
+
+				require.EqualError(t, err, `[{"message":"too small","path":["directiveNullableArg"]}]`)
+				require.Nil(t, resp.DirectiveNullableArg)
+			})
+			t.Run("when function success on nullable arg directives", func(t *testing.T) {
+				var resp struct {
+					DirectiveNullableArg *string
+				}
+
+				err := c.WebsocketOnce(`subscription { directiveNullableArg }`, &resp)
+
+				require.Nil(t, err)
+				require.Equal(t, "Ok", *resp.DirectiveNullableArg)
+			})
+			t.Run("when function success on valid nullable arg directives", func(t *testing.T) {
+				var resp struct {
+					DirectiveNullableArg *string
+				}
+
+				err := c.WebsocketOnce(`subscription { directiveNullableArg(arg: 1) }`, &resp)
+
+				require.Nil(t, err)
+				require.Equal(t, "Ok", *resp.DirectiveNullableArg)
+			})
+			t.Run("when function success", func(t *testing.T) {
+				var resp struct {
+					DirectiveArg *string
+				}
+
+				err := c.WebsocketOnce(`subscription { directiveArg(arg: "test") }`, &resp)
+
+				require.Nil(t, err)
+				require.Equal(t, "Ok", *resp.DirectiveArg)
+			})
 		})
 	})
 }

@@ -23,8 +23,9 @@ Maps a `Time` GraphQL scalar to a Go `time.Time` struct.
 scalar Map
 ```
 
-Maps an arbitrary GraphQL value to a `map[string]{interface}` Go type.
+Maps an arbitrary GraphQL value to a `map[string]interface{}` Go type.
 
+### Upload
 
 ```graphql
 scalar Upload
@@ -48,7 +49,7 @@ Maps an arbitrary GraphQL value to a `interface{}` Go type.
 
 ##  Custom scalars with user defined types
 
-For user defined types you can implement the graphql.Marshal and graphql.Unmarshal interfaces and they will be called.
+For user defined types you can implement the graphql.Marshaler and graphql.Unmarshaler interfaces and they will be called.
 
 ```go
 package mypkg
@@ -61,7 +62,7 @@ import (
 
 type YesNo bool
 
-// UnmarshalGQL implements the graphql.Marshaler interface
+// UnmarshalGQL implements the graphql.Unmarshaler interface
 func (y *YesNo) UnmarshalGQL(v interface{}) error {
 	yes, ok := v.(string)
 	if !ok {

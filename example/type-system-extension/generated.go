@@ -707,11 +707,18 @@ func (ec *executionContext) _Todo_verified(ctx context.Context, field graphql.Co
 			return obj.Verified, nil
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.FieldLogging == nil {
+				return nil, errors.New("directive fieldLogging is not implemented")
+			}
 			return ec.directives.FieldLogging(ctx, obj, directive0)
 		}
+
 		tmp, err := directive1(rctx)
 		if err != nil {
 			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
 		}
 		if data, ok := tmp.(bool); ok {
 			return data, nil
@@ -1907,8 +1914,8 @@ func (ec *executionContext) unmarshalInputTodoInput(ctx context.Context, obj int
 
 // region    ************************** interface.gotpl ***************************
 
-func (ec *executionContext) _Data(ctx context.Context, sel ast.SelectionSet, obj *Data) graphql.Marshaler {
-	switch obj := (*obj).(type) {
+func (ec *executionContext) _Data(ctx context.Context, sel ast.SelectionSet, obj Data) graphql.Marshaler {
+	switch obj := (obj).(type) {
 	case nil:
 		return graphql.Null
 	case Todo:
@@ -1920,8 +1927,8 @@ func (ec *executionContext) _Data(ctx context.Context, sel ast.SelectionSet, obj
 	}
 }
 
-func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj *Node) graphql.Marshaler {
-	switch obj := (*obj).(type) {
+func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj Node) graphql.Marshaler {
+	switch obj := (obj).(type) {
 	case nil:
 		return graphql.Null
 	case Todo:

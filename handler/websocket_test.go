@@ -9,8 +9,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/99designs/gqlgen/client"
+	"github.com/99designs/gqlgen/graphql"
 	"github.com/gorilla/websocket"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/vektah/gqlparser/ast"
 )
 
 func TestWebsocket(t *testing.T) {
@@ -59,6 +63,7 @@ func TestWebsocket(t *testing.T) {
 		require.NoError(t, c.WriteJSON(&operationMessage{Type: connectionInitMsg}))
 
 		require.Equal(t, connectionAckMsg, readOp(c).Type)
+		require.Equal(t, connectionKeepAliveMsg, readOp(c).Type)
 	})
 
 	t.Run("client can terminate before run", func(t *testing.T) {
@@ -67,6 +72,7 @@ func TestWebsocket(t *testing.T) {
 
 		require.NoError(t, c.WriteJSON(&operationMessage{Type: connectionInitMsg}))
 		require.Equal(t, connectionAckMsg, readOp(c).Type)
+		require.Equal(t, connectionKeepAliveMsg, readOp(c).Type)
 
 		require.NoError(t, c.WriteJSON(&operationMessage{Type: connectionTerminateMsg}))
 
@@ -80,6 +86,7 @@ func TestWebsocket(t *testing.T) {
 
 		require.NoError(t, c.WriteJSON(&operationMessage{Type: connectionInitMsg}))
 		require.Equal(t, connectionAckMsg, readOp(c).Type)
+		require.Equal(t, connectionKeepAliveMsg, readOp(c).Type)
 
 		require.NoError(t, c.WriteJSON(&operationMessage{
 			Type:    startMsg,
@@ -98,6 +105,7 @@ func TestWebsocket(t *testing.T) {
 
 		require.NoError(t, c.WriteJSON(&operationMessage{Type: connectionInitMsg}))
 		require.Equal(t, connectionAckMsg, readOp(c).Type)
+		require.Equal(t, connectionKeepAliveMsg, readOp(c).Type)
 
 		require.NoError(t, c.WriteJSON(&operationMessage{
 			Type:    startMsg,
@@ -138,6 +146,7 @@ func TestWebsocketWithKeepAlive(t *testing.T) {
 
 		require.NoError(t, c.WriteJSON(&operationMessage{Type: connectionInitMsg}))
 		require.Equal(t, connectionAckMsg, readOp(c).Type)
+		require.Equal(t, connectionKeepAliveMsg, readOp(c).Type)
 
 		require.NoError(t, c.WriteJSON(&operationMessage{
 			Type:    startMsg,
@@ -174,12 +183,40 @@ func TestWebsocketInitFunc(t *testing.T) {
 		require.NoError(t, c.WriteJSON(&operationMessage{Type: connectionInitMsg}))
 
 		require.Equal(t, connectionAckMsg, readOp(c).Type)
+		require.Equal(t, connectionKeepAliveMsg, readOp(c).Type)
+	})
+
+	t.Run("can return context for request from WebsocketInitFunc", func(t *testing.T) {
+		es := &executableSchemaMock{
+			QueryFunc: func(ctx context.Context, op *ast.OperationDefinition) *graphql.Response {
+				assert.Equal(t, "newvalue", ctx.Value("newkey"))
+				return &graphql.Response{Data: []byte(`{"empty":"ok"}`)}
+			},
+		}
+
+		h := GraphQL(es,
+			WebsocketInitFunc(func(ctx context.Context, initPayload InitPayload) (context.Context, error) {
+				return context.WithValue(ctx, "newkey", "newvalue"), nil
+			}))
+
+		c := client.New(h)
+
+		socket := c.Websocket("{ empty } ")
+		defer socket.Close()
+		var resp struct {
+			Empty string
+		}
+		err := socket.Next(&resp)
+		require.NoError(t, err)
+		require.Equal(t, "ok", resp.Empty)
 	})
 
 	t.Run("accept connection if WebsocketInitFunc is provided and is accepting connection", func(t *testing.T) {
-		h := GraphQL(&executableSchemaStub{next}, WebsocketInitFunc(func(ctx context.Context, initPayload InitPayload) error {
-			return nil
-		}))
+		h := GraphQL(&executableSchemaStub{next},
+			WebsocketInitFunc(func(ctx context.Context, initPayload InitPayload) (context.Context, error) {
+				return context.WithValue(ctx, "newkey", "newvalue"), nil
+			}),
+		)
 		srv := httptest.NewServer(h)
 		defer srv.Close()
 
@@ -189,11 +226,12 @@ func TestWebsocketInitFunc(t *testing.T) {
 		require.NoError(t, c.WriteJSON(&operationMessage{Type: connectionInitMsg}))
 
 		require.Equal(t, connectionAckMsg, readOp(c).Type)
+		require.Equal(t, connectionKeepAliveMsg, readOp(c).Type)
 	})
 
 	t.Run("reject connection if WebsocketInitFunc is provided and is accepting connection", func(t *testing.T) {
-		h := GraphQL(&executableSchemaStub{next}, WebsocketInitFunc(func(ctx context.Context, initPayload InitPayload) error {
-			return errors.New("invalid init payload")
+		h := GraphQL(&executableSchemaStub{next}, WebsocketInitFunc(func(ctx context.Context, initPayload InitPayload) (context.Context, error) {
+			return ctx, errors.New("invalid init payload")
 		}))
 		srv := httptest.NewServer(h)
 		defer srv.Close()
@@ -210,10 +248,12 @@ func TestWebsocketInitFunc(t *testing.T) {
 }
 
 func wsConnect(url string) *websocket.Conn {
-	c, _, err := websocket.DefaultDialer.Dial(strings.Replace(url, "http://", "ws://", -1), nil)
+	c, resp, err := websocket.DefaultDialer.Dial(strings.Replace(url, "http://", "ws://", -1), nil)
 	if err != nil {
 		panic(err)
 	}
+	_ = resp.Body.Close()
+
 	return c
 }
 

@@ -79,6 +79,10 @@ type OverlappingFields struct {
 	NewFoo int
 }
 
+type ObjectDirectivesWithCustomGoModel struct {
+	NullableText string // not *string, but schema is `String @toNull` type.
+}
+
 type FallbackToStringEncoding string
 
 const (
@@ -98,3 +102,5 @@ type PrimitiveString string
 func (s PrimitiveString) Doubled() string {
 	return string(s) + string(s)
 }
+
+type Bytes []byte

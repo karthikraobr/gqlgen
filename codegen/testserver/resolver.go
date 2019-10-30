@@ -4,7 +4,7 @@ import (
 	"context"
 
 	introspection1 "github.com/99designs/gqlgen/codegen/testserver/introspection"
-	"github.com/99designs/gqlgen/codegen/testserver/invalid-packagename"
+	invalid_packagename "github.com/99designs/gqlgen/codegen/testserver/invalid-packagename"
 )
 
 // THIS CODE IS A STARTING POINT ONLY. IT WILL NOT BE UPDATED WITH SCHEMA CHANGES.
@@ -122,9 +122,6 @@ func (r *queryResolver) NestedInputs(ctx context.Context, input [][]*OuterInput)
 func (r *queryResolver) NestedOutputs(ctx context.Context) ([][]*OuterObject, error) {
 	panic("not implemented")
 }
-func (r *queryResolver) Shapes(ctx context.Context) ([]Shape, error) {
-	panic("not implemented")
-}
 func (r *queryResolver) ModelMethods(ctx context.Context) (*ModelMethods, error) {
 	panic("not implemented")
 }
@@ -152,7 +149,7 @@ func (r *queryResolver) Overlapping(ctx context.Context) (*OverlappingFields, er
 func (r *queryResolver) DirectiveArg(ctx context.Context, arg string) (*string, error) {
 	panic("not implemented")
 }
-func (r *queryResolver) DirectiveNullableArg(ctx context.Context, arg *int, arg2 *int) (*string, error) {
+func (r *queryResolver) DirectiveNullableArg(ctx context.Context, arg *int, arg2 *int, arg3 *string) (*string, error) {
 	panic("not implemented")
 }
 func (r *queryResolver) DirectiveInputNullable(ctx context.Context, arg *InputDirectives) (*string, error) {
@@ -164,13 +161,34 @@ func (r *queryResolver) DirectiveInput(ctx context.Context, arg InputDirectives)
 func (r *queryResolver) DirectiveInputType(ctx context.Context, arg InnerInput) (*string, error) {
 	panic("not implemented")
 }
+func (r *queryResolver) DirectiveObject(ctx context.Context) (*ObjectDirectives, error) {
+	panic("not implemented")
+}
+func (r *queryResolver) DirectiveObjectWithCustomGoModel(ctx context.Context) (*ObjectDirectivesWithCustomGoModel, error) {
+	panic("not implemented")
+}
 func (r *queryResolver) DirectiveFieldDef(ctx context.Context, ret string) (string, error) {
 	panic("not implemented")
 }
 func (r *queryResolver) DirectiveField(ctx context.Context) (*string, error) {
 	panic("not implemented")
 }
+func (r *queryResolver) DirectiveDouble(ctx context.Context) (*string, error) {
+	panic("not implemented")
+}
+func (r *queryResolver) DirectiveUnimplemented(ctx context.Context) (*string, error) {
+	panic("not implemented")
+}
+func (r *queryResolver) Shapes(ctx context.Context) ([]Shape, error) {
+	panic("not implemented")
+}
+func (r *queryResolver) NoShape(ctx context.Context) (Shape, error) {
+	panic("not implemented")
+}
 func (r *queryResolver) MapStringInterface(ctx context.Context, in map[string]interface{}) (map[string]interface{}, error) {
+	panic("not implemented")
+}
+func (r *queryResolver) MapNestedStringInterface(ctx context.Context, in *NestedMapInput) (map[string]interface{}, error) {
 	panic("not implemented")
 }
 func (r *queryResolver) ErrorBubble(ctx context.Context) (*Error, error) {
@@ -222,6 +240,18 @@ func (r *subscriptionResolver) Updated(ctx context.Context) (<-chan string, erro
 	panic("not implemented")
 }
 func (r *subscriptionResolver) InitPayload(ctx context.Context) (<-chan string, error) {
+	panic("not implemented")
+}
+func (r *subscriptionResolver) DirectiveArg(ctx context.Context, arg string) (<-chan *string, error) {
+	panic("not implemented")
+}
+func (r *subscriptionResolver) DirectiveNullableArg(ctx context.Context, arg *int, arg2 *int, arg3 *string) (<-chan *string, error) {
+	panic("not implemented")
+}
+func (r *subscriptionResolver) DirectiveDouble(ctx context.Context) (<-chan *string, error) {
+	panic("not implemented")
+}
+func (r *subscriptionResolver) DirectiveUnimplemented(ctx context.Context) (<-chan *string, error) {
 	panic("not implemented")
 }
 

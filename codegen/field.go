@@ -27,6 +27,7 @@ type Field struct {
 	NoErr            bool             // If this is bound to a go method, does that method have an error as the second argument
 	Object           *Object          // A link back to the parent object
 	Default          interface{}      // The default value
+	Stream           bool             // does this field return a channel?
 	Directives       []*Directive
 }
 
@@ -73,16 +74,18 @@ func (b *builder) buildField(obj *Object, field *ast.FieldDefinition) (*Field, e
 	return &f, nil
 }
 
-func (b *builder) bindField(obj *Object, f *Field) error {
+func (b *builder) bindField(obj *Object, f *Field) (errret error) {
 	defer func() {
 		if f.TypeReference == nil {
 			tr, err := b.Binder.TypeReference(f.Type, nil)
 			if err != nil {
-				panic(err)
+				errret = err
 			}
 			f.TypeReference = tr
 		}
 	}()
+
+	f.Stream = obj.Stream
 
 	switch {
 	case f.Name == "__schema":
@@ -384,16 +387,16 @@ func (f *Field) ComplexitySignature() string {
 }
 
 func (f *Field) ComplexityArgs() string {
-	var args []string
-	for _, arg := range f.Args {
-		args = append(args, "args["+strconv.Quote(arg.Name)+"].("+templates.CurrentImports.LookupType(arg.TypeReference.GO)+")")
+	args := make([]string, len(f.Args))
+	for i, arg := range f.Args {
+		args[i] = "args[" + strconv.Quote(arg.Name) + "].(" + templates.CurrentImports.LookupType(arg.TypeReference.GO) + ")"
 	}
 
 	return strings.Join(args, ", ")
 }
 
 func (f *Field) CallArgs() string {
-	var args []string
+	args := make([]string, 0, len(f.Args)+2)
 
 	if f.IsResolver {
 		args = append(args, "rctx")
@@ -401,10 +404,8 @@ func (f *Field) CallArgs() string {
 		if !f.Object.Root {
 			args = append(args, "obj")
 		}
-	} else {
-		if f.MethodHasContext {
-			args = append(args, "ctx")
-		}
+	} else if f.MethodHasContext {
+		args = append(args, "ctx")
 	}
 
 	for _, arg := range f.Args {

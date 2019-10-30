@@ -14,7 +14,7 @@ import (
 	"time"
 
 	introspection1 "github.com/99designs/gqlgen/codegen/testserver/introspection"
-	"github.com/99designs/gqlgen/codegen/testserver/invalid-packagename"
+	invalid_packagename "github.com/99designs/gqlgen/codegen/testserver/invalid-packagename"
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
 	"github.com/vektah/gqlparser"
@@ -54,11 +54,21 @@ type ResolverRoot interface {
 type DirectiveRoot struct {
 	Custom func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error)
 
+	Directive1 func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error)
+
+	Directive2 func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error)
+
 	Length func(ctx context.Context, obj interface{}, next graphql.Resolver, min int, max *int, message *string) (res interface{}, err error)
 
 	Logged func(ctx context.Context, obj interface{}, next graphql.Resolver, id string) (res interface{}, err error)
 
+	MakeNil func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error)
+
 	Range func(ctx context.Context, obj interface{}, next graphql.Resolver, min *int, max *int) (res interface{}, err error)
+
+	ToNull func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error)
+
+	Unimplemented func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error)
 }
 
 type ComplexityRoot struct {
@@ -162,6 +172,15 @@ type ComplexityRoot struct {
 		WithContext   func(childComplexity int) int
 	}
 
+	ObjectDirectives struct {
+		NullableText func(childComplexity int) int
+		Text         func(childComplexity int) int
+	}
+
+	ObjectDirectivesWithCustomGoModel struct {
+		NullableText func(childComplexity int) int
+	}
+
 	OuterObject struct {
 		Inner func(childComplexity int) int
 	}
@@ -190,43 +209,49 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Autobind               func(childComplexity int) int
-		Collision              func(childComplexity int) int
-		DefaultScalar          func(childComplexity int, arg string) int
-		DeprecatedField        func(childComplexity int) int
-		DirectiveArg           func(childComplexity int, arg string) int
-		DirectiveField         func(childComplexity int) int
-		DirectiveFieldDef      func(childComplexity int, ret string) int
-		DirectiveInput         func(childComplexity int, arg InputDirectives) int
-		DirectiveInputNullable func(childComplexity int, arg *InputDirectives) int
-		DirectiveInputType     func(childComplexity int, arg InnerInput) int
-		DirectiveNullableArg   func(childComplexity int, arg *int, arg2 *int) int
-		ErrorBubble            func(childComplexity int) int
-		Errors                 func(childComplexity int) int
-		Fallback               func(childComplexity int, arg FallbackToStringEncoding) int
-		InputSlice             func(childComplexity int, arg []string) int
-		InvalidIdentifier      func(childComplexity int) int
-		MapInput               func(childComplexity int, input map[string]interface{}) int
-		MapStringInterface     func(childComplexity int, in map[string]interface{}) int
-		ModelMethods           func(childComplexity int) int
-		NestedInputs           func(childComplexity int, input [][]*OuterInput) int
-		NestedOutputs          func(childComplexity int) int
-		NullableArg            func(childComplexity int, arg *int) int
-		OptionalUnion          func(childComplexity int) int
-		Overlapping            func(childComplexity int) int
-		Panics                 func(childComplexity int) int
-		PrimitiveObject        func(childComplexity int) int
-		PrimitiveStringObject  func(childComplexity int) int
-		Recursive              func(childComplexity int, input *RecursiveInputSlice) int
-		ScalarSlice            func(childComplexity int) int
-		ShapeUnion             func(childComplexity int) int
-		Shapes                 func(childComplexity int) int
-		Slices                 func(childComplexity int) int
-		User                   func(childComplexity int, id int) int
-		Valid                  func(childComplexity int) int
-		ValidType              func(childComplexity int) int
-		WrappedScalar          func(childComplexity int) int
-		WrappedStruct          func(childComplexity int) int
+		Autobind                         func(childComplexity int) int
+		Collision                        func(childComplexity int) int
+		DefaultScalar                    func(childComplexity int, arg string) int
+		DeprecatedField                  func(childComplexity int) int
+		DirectiveArg                     func(childComplexity int, arg string) int
+		DirectiveDouble                  func(childComplexity int) int
+		DirectiveField                   func(childComplexity int) int
+		DirectiveFieldDef                func(childComplexity int, ret string) int
+		DirectiveInput                   func(childComplexity int, arg InputDirectives) int
+		DirectiveInputNullable           func(childComplexity int, arg *InputDirectives) int
+		DirectiveInputType               func(childComplexity int, arg InnerInput) int
+		DirectiveNullableArg             func(childComplexity int, arg *int, arg2 *int, arg3 *string) int
+		DirectiveObject                  func(childComplexity int) int
+		DirectiveObjectWithCustomGoModel func(childComplexity int) int
+		DirectiveUnimplemented           func(childComplexity int) int
+		ErrorBubble                      func(childComplexity int) int
+		Errors                           func(childComplexity int) int
+		Fallback                         func(childComplexity int, arg FallbackToStringEncoding) int
+		InputSlice                       func(childComplexity int, arg []string) int
+		InvalidIdentifier                func(childComplexity int) int
+		MapInput                         func(childComplexity int, input map[string]interface{}) int
+		MapNestedStringInterface         func(childComplexity int, in *NestedMapInput) int
+		MapStringInterface               func(childComplexity int, in map[string]interface{}) int
+		ModelMethods                     func(childComplexity int) int
+		NestedInputs                     func(childComplexity int, input [][]*OuterInput) int
+		NestedOutputs                    func(childComplexity int) int
+		NoShape                          func(childComplexity int) int
+		NullableArg                      func(childComplexity int, arg *int) int
+		OptionalUnion                    func(childComplexity int) int
+		Overlapping                      func(childComplexity int) int
+		Panics                           func(childComplexity int) int
+		PrimitiveObject                  func(childComplexity int) int
+		PrimitiveStringObject            func(childComplexity int) int
+		Recursive                        func(childComplexity int, input *RecursiveInputSlice) int
+		ScalarSlice                      func(childComplexity int) int
+		ShapeUnion                       func(childComplexity int) int
+		Shapes                           func(childComplexity int) int
+		Slices                           func(childComplexity int) int
+		User                             func(childComplexity int, id int) int
+		Valid                            func(childComplexity int) int
+		ValidType                        func(childComplexity int) int
+		WrappedScalar                    func(childComplexity int) int
+		WrappedStruct                    func(childComplexity int) int
 	}
 
 	Rectangle struct {
@@ -243,8 +268,12 @@ type ComplexityRoot struct {
 	}
 
 	Subscription struct {
-		InitPayload func(childComplexity int) int
-		Updated     func(childComplexity int) int
+		DirectiveArg           func(childComplexity int, arg string) int
+		DirectiveDouble        func(childComplexity int) int
+		DirectiveNullableArg   func(childComplexity int, arg *int, arg2 *int, arg3 *string) int
+		DirectiveUnimplemented func(childComplexity int) int
+		InitPayload            func(childComplexity int) int
+		Updated                func(childComplexity int) int
 	}
 
 	User struct {
@@ -318,7 +347,6 @@ type QueryResolver interface {
 	Recursive(ctx context.Context, input *RecursiveInputSlice) (*bool, error)
 	NestedInputs(ctx context.Context, input [][]*OuterInput) (*bool, error)
 	NestedOutputs(ctx context.Context) ([][]*OuterObject, error)
-	Shapes(ctx context.Context) ([]Shape, error)
 	ModelMethods(ctx context.Context) (*ModelMethods, error)
 	User(ctx context.Context, id int) (*User, error)
 	NullableArg(ctx context.Context, arg *int) (*string, error)
@@ -328,13 +356,20 @@ type QueryResolver interface {
 	DeprecatedField(ctx context.Context) (string, error)
 	Overlapping(ctx context.Context) (*OverlappingFields, error)
 	DirectiveArg(ctx context.Context, arg string) (*string, error)
-	DirectiveNullableArg(ctx context.Context, arg *int, arg2 *int) (*string, error)
+	DirectiveNullableArg(ctx context.Context, arg *int, arg2 *int, arg3 *string) (*string, error)
 	DirectiveInputNullable(ctx context.Context, arg *InputDirectives) (*string, error)
 	DirectiveInput(ctx context.Context, arg InputDirectives) (*string, error)
 	DirectiveInputType(ctx context.Context, arg InnerInput) (*string, error)
+	DirectiveObject(ctx context.Context) (*ObjectDirectives, error)
+	DirectiveObjectWithCustomGoModel(ctx context.Context) (*ObjectDirectivesWithCustomGoModel, error)
 	DirectiveFieldDef(ctx context.Context, ret string) (string, error)
 	DirectiveField(ctx context.Context) (*string, error)
+	DirectiveDouble(ctx context.Context) (*string, error)
+	DirectiveUnimplemented(ctx context.Context) (*string, error)
+	Shapes(ctx context.Context) ([]Shape, error)
+	NoShape(ctx context.Context) (Shape, error)
 	MapStringInterface(ctx context.Context, in map[string]interface{}) (map[string]interface{}, error)
+	MapNestedStringInterface(ctx context.Context, in *NestedMapInput) (map[string]interface{}, error)
 	ErrorBubble(ctx context.Context) (*Error, error)
 	Errors(ctx context.Context) (*Errors, error)
 	Valid(ctx context.Context) (string, error)
@@ -353,6 +388,10 @@ type QueryResolver interface {
 type SubscriptionResolver interface {
 	Updated(ctx context.Context) (<-chan string, error)
 	InitPayload(ctx context.Context) (<-chan string, error)
+	DirectiveArg(ctx context.Context, arg string) (<-chan *string, error)
+	DirectiveNullableArg(ctx context.Context, arg *int, arg2 *int, arg3 *string) (<-chan *string, error)
+	DirectiveDouble(ctx context.Context) (<-chan *string, error)
+	DirectiveUnimplemented(ctx context.Context) (<-chan *string, error)
 }
 type UserResolver interface {
 	Friends(ctx context.Context, obj *User) ([]*User, error)
@@ -632,6 +671,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ModelMethods.WithContext(childComplexity), true
 
+	case "ObjectDirectives.nullableText":
+		if e.complexity.ObjectDirectives.NullableText == nil {
+			break
+		}
+
+		return e.complexity.ObjectDirectives.NullableText(childComplexity), true
+
+	case "ObjectDirectives.text":
+		if e.complexity.ObjectDirectives.Text == nil {
+			break
+		}
+
+		return e.complexity.ObjectDirectives.Text(childComplexity), true
+
+	case "ObjectDirectivesWithCustomGoModel.nullableText":
+		if e.complexity.ObjectDirectivesWithCustomGoModel.NullableText == nil {
+			break
+		}
+
+		return e.complexity.ObjectDirectivesWithCustomGoModel.NullableText(childComplexity), true
+
 	case "OuterObject.inner":
 		if e.complexity.OuterObject.Inner == nil {
 			break
@@ -771,6 +831,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.DirectiveArg(childComplexity, args["arg"].(string)), true
 
+	case "Query.directiveDouble":
+		if e.complexity.Query.DirectiveDouble == nil {
+			break
+		}
+
+		return e.complexity.Query.DirectiveDouble(childComplexity), true
+
 	case "Query.directiveField":
 		if e.complexity.Query.DirectiveField == nil {
 			break
@@ -836,7 +903,28 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.DirectiveNullableArg(childComplexity, args["arg"].(*int), args["arg2"].(*int)), true
+		return e.complexity.Query.DirectiveNullableArg(childComplexity, args["arg"].(*int), args["arg2"].(*int), args["arg3"].(*string)), true
+
+	case "Query.directiveObject":
+		if e.complexity.Query.DirectiveObject == nil {
+			break
+		}
+
+		return e.complexity.Query.DirectiveObject(childComplexity), true
+
+	case "Query.directiveObjectWithCustomGoModel":
+		if e.complexity.Query.DirectiveObjectWithCustomGoModel == nil {
+			break
+		}
+
+		return e.complexity.Query.DirectiveObjectWithCustomGoModel(childComplexity), true
+
+	case "Query.directiveUnimplemented":
+		if e.complexity.Query.DirectiveUnimplemented == nil {
+			break
+		}
+
+		return e.complexity.Query.DirectiveUnimplemented(childComplexity), true
 
 	case "Query.errorBubble":
 		if e.complexity.Query.ErrorBubble == nil {
@@ -895,6 +983,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.MapInput(childComplexity, args["input"].(map[string]interface{})), true
 
+	case "Query.mapNestedStringInterface":
+		if e.complexity.Query.MapNestedStringInterface == nil {
+			break
+		}
+
+		args, err := ec.field_Query_mapNestedStringInterface_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.MapNestedStringInterface(childComplexity, args["in"].(*NestedMapInput)), true
+
 	case "Query.mapStringInterface":
 		if e.complexity.Query.MapStringInterface == nil {
 			break
@@ -932,6 +1032,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.NestedOutputs(childComplexity), true
+
+	case "Query.noShape":
+		if e.complexity.Query.NoShape == nil {
+			break
+		}
+
+		return e.complexity.Query.NoShape(childComplexity), true
 
 	case "Query.nullableArg":
 		if e.complexity.Query.NullableArg == nil {
@@ -1108,6 +1215,44 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Slices.Test4(childComplexity), true
+
+	case "Subscription.directiveArg":
+		if e.complexity.Subscription.DirectiveArg == nil {
+			break
+		}
+
+		args, err := ec.field_Subscription_directiveArg_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Subscription.DirectiveArg(childComplexity, args["arg"].(string)), true
+
+	case "Subscription.directiveDouble":
+		if e.complexity.Subscription.DirectiveDouble == nil {
+			break
+		}
+
+		return e.complexity.Subscription.DirectiveDouble(childComplexity), true
+
+	case "Subscription.directiveNullableArg":
+		if e.complexity.Subscription.DirectiveNullableArg == nil {
+			break
+		}
+
+		args, err := ec.field_Subscription_directiveNullableArg_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Subscription.DirectiveNullableArg(childComplexity, args["arg"].(*int), args["arg2"].(*int), args["arg3"].(*string)), true
+
+	case "Subscription.directiveUnimplemented":
+		if e.complexity.Subscription.DirectiveUnimplemented == nil {
+			break
+		}
+
+		return e.complexity.Subscription.DirectiveUnimplemented(childComplexity), true
 
 	case "Subscription.initPayload":
 		if e.complexity.Subscription.InitPayload == nil {
@@ -1316,9 +1461,9 @@ type Map {
 }
 
 type OverlappingFields {
-  oneFoo: Int!
-  twoFoo: Int!
-  oldFoo: Int!
+  oneFoo: Int! @goField(name: "foo")
+  twoFoo: Int! @goField(name: "foo")
+  oldFoo: Int! @goField(name: "foo", forceResolver: true)
   newFoo: Int!
   new_foo: Int!
 }
@@ -1327,19 +1472,35 @@ type OverlappingFields {
 directive @range(min: Int = 0, max: Int) on ARGUMENT_DEFINITION
 directive @custom on ARGUMENT_DEFINITION
 directive @logged(id: UUID!) on FIELD
+directive @toNull on ARGUMENT_DEFINITION | INPUT_FIELD_DEFINITION | FIELD_DEFINITION
+directive @directive1 on FIELD_DEFINITION
+directive @directive2 on FIELD_DEFINITION
+directive @unimplemented on FIELD_DEFINITION
 
 extend type Query {
     directiveArg(arg: String! @length(min:1, max: 255, message: "invalid length")): String
-    directiveNullableArg(arg: Int @range(min:0), arg2: Int @range): String
+    directiveNullableArg(arg: Int @range(min:0), arg2: Int @range, arg3: String @toNull): String
     directiveInputNullable(arg: InputDirectives): String
     directiveInput(arg: InputDirectives!): String
     directiveInputType(arg: InnerInput! @custom): String
+    directiveObject: ObjectDirectives
+    directiveObjectWithCustomGoModel: ObjectDirectivesWithCustomGoModel
     directiveFieldDef(ret: String!): String! @length(min: 1, message: "not valid")
     directiveField: String
+    directiveDouble: String @directive1 @directive2
+    directiveUnimplemented: String @unimplemented
+}
+
+extend type Subscription {
+    directiveArg(arg: String! @length(min:1, max: 255, message: "invalid length")): String
+    directiveNullableArg(arg: Int @range(min:0), arg2: Int @range, arg3: String @toNull): String
+    directiveDouble: String @directive1 @directive2
+    directiveUnimplemented: String @unimplemented
 }
 
 input InputDirectives {
     text: String! @length(min: 0, max: 7, message: "not valid")
+    nullableText: String @toNull
     inner: InnerDirectives!
     innerNullable: InnerDirectives
     thirdParty: ThirdParty @length(min: 0, max: 7)
@@ -1348,6 +1509,36 @@ input InputDirectives {
 input InnerDirectives {
     message: String! @length(min: 1, message: "not valid")
 }
+
+type ObjectDirectives {
+    text: String! @length(min: 0, max: 7, message: "not valid")
+    nullableText: String @toNull
+}
+
+type ObjectDirectivesWithCustomGoModel {
+    nullableText: String @toNull
+}
+`},
+	&ast.Source{Name: "interfaces.graphql", Input: `extend type Query {
+    shapes: [Shape]
+    noShape: Shape @makeNil
+}
+
+interface Shape {
+    area: Float
+}
+type Circle implements Shape {
+    radius: Float
+    area: Float
+}
+type Rectangle implements Shape {
+    length: Float
+    width: Float
+    area: Float
+}
+union ShapeUnion @goModel(model:"testserver.ShapeUnion") = Circle | Rectangle
+
+directive @makeNil on FIELD_DEFINITION
 `},
 	&ast.Source{Name: "loops.graphql", Input: `type LoopA {
     b: LoopB!
@@ -1359,16 +1550,21 @@ type LoopB {
 `},
 	&ast.Source{Name: "maps.graphql", Input: `extend type Query {
     mapStringInterface(in: MapStringInterfaceInput): MapStringInterfaceType
+    mapNestedStringInterface(in: NestedMapInput): MapStringInterfaceType
 }
 
-type MapStringInterfaceType {
+type MapStringInterfaceType @goModel(model: "map[string]interface{}") {
     a: String
     b: Int
 }
 
-input MapStringInterfaceInput {
+input MapStringInterfaceInput @goModel(model: "map[string]interface{}") {
     a: String
     b: Int
+}
+
+input NestedMapInput {
+    map: MapStringInterfaceInput
 }
 `},
 	&ast.Source{Name: "nulls.graphql", Input: `extend type Query {
@@ -1432,14 +1628,16 @@ type EmbeddedDefaultScalar {
     value: DefaultScalarImplementation
 }
 `},
-	&ast.Source{Name: "schema.graphql", Input: `type Query {
+	&ast.Source{Name: "schema.graphql", Input: `directive @goModel(model: String, models: [String!]) on OBJECT | INPUT_OBJECT | SCALAR | ENUM | INTERFACE | UNION
+directive @goField(forceResolver: Boolean, name: String) on INPUT_FIELD_DEFINITION | FIELD_DEFINITION
+
+type Query {
     invalidIdentifier: InvalidIdentifier
     collision: It
     mapInput(input: Changes): Boolean
     recursive(input: RecursiveInputSlice): Boolean
     nestedInputs(input: [[OuterInput]] = [[{inner: {id: 1}}]]): Boolean
     nestedOutputs: [[OuterObject]]
-    shapes: [Shape]
     modelMethods: ModelMethods
     user(id: Int!): User!
     nullableArg(arg: Int = 123): String
@@ -1456,7 +1654,7 @@ type Subscription {
 
 type User {
     id: Int!
-    friends: [User!]!
+    friends: [User!]! @goField(forceResolver: true)
     created: Time!
     updated: Time
 }
@@ -1484,7 +1682,7 @@ type It {
     id: ID!
 }
 
-input Changes {
+input Changes @goModel(model:"map[string]interface{}") {
     a: Int
     b: Int
 }
@@ -1501,7 +1699,7 @@ input OuterInput {
     inner: InnerInput!
 }
 
-scalar ThirdParty
+scalar ThirdParty @goModel(model:"testserver.ThirdParty")
 
 type OuterObject {
     inner: InnerObject!
@@ -1511,25 +1709,11 @@ type InnerObject {
     id: Int!
 }
 
-interface Shape {
-    area: Float
-}
-type Circle implements Shape {
-    radius: Float
-    area: Float
-}
-type Rectangle implements Shape {
-    length: Float
-    width: Float
-    area: Float
-}
-union ShapeUnion = Circle | Rectangle
-
 type ForcedResolver {
-    field: Circle
+    field: Circle @goField(forceResolver: true)
 }
 
-type EmbeddedPointer {
+type EmbeddedPointer @goModel(model:"testserver.EmbeddedPointerModel") {
     ID: String
     Title: String
 }
@@ -1588,7 +1772,7 @@ extend type Query {
 """ These things are all valid, but without care generate invalid go code """
 type ValidType {
     differentCase: String!
-    different_case: String!
+    different_case: String! @goField(name:"DifferentCaseOld")
     validInputKeywords(input: ValidInput): Boolean!
     validArgs(
         break:       String!,
@@ -1646,7 +1830,7 @@ input ValidInput {
     import:      String!
     return:      String!
     var:         String!
-    _:           String!
+    _:           String! @goField(name: "Underscore")
 }
 
 # see https://github.com/99designs/gqlgen/issues/694
@@ -1826,8 +2010,12 @@ func (ec *executionContext) field_Query_directiveArg_args(ctx context.Context, r
 			if err != nil {
 				return nil, err
 			}
+			if ec.directives.Length == nil {
+				return nil, errors.New("directive length is not implemented")
+			}
 			return ec.directives.Length(ctx, rawArgs, directive0, min, max, message)
 		}
+
 		tmp, err = directive1(ctx)
 		if err != nil {
 			return nil, err
@@ -1879,8 +2067,12 @@ func (ec *executionContext) field_Query_directiveInputType_args(ctx context.Cont
 			return ec.unmarshalNInnerInput2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚐInnerInput(ctx, tmp)
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.Custom == nil {
+				return nil, errors.New("directive custom is not implemented")
+			}
 			return ec.directives.Custom(ctx, rawArgs, directive0)
 		}
+
 		tmp, err = directive1(ctx)
 		if err != nil {
 			return nil, err
@@ -1920,14 +2112,20 @@ func (ec *executionContext) field_Query_directiveNullableArg_args(ctx context.Co
 			if err != nil {
 				return nil, err
 			}
+			if ec.directives.Range == nil {
+				return nil, errors.New("directive range is not implemented")
+			}
 			return ec.directives.Range(ctx, rawArgs, directive0, min, nil)
 		}
+
 		tmp, err = directive1(ctx)
 		if err != nil {
 			return nil, err
 		}
 		if data, ok := tmp.(*int); ok {
 			arg0 = data
+		} else if tmp == nil {
+			arg0 = nil
 		} else {
 			return nil, fmt.Errorf(`unexpected type %T from directive, should be *int`, tmp)
 		}
@@ -1941,19 +2139,48 @@ func (ec *executionContext) field_Query_directiveNullableArg_args(ctx context.Co
 			if err != nil {
 				return nil, err
 			}
+			if ec.directives.Range == nil {
+				return nil, errors.New("directive range is not implemented")
+			}
 			return ec.directives.Range(ctx, rawArgs, directive0, min, nil)
 		}
+
 		tmp, err = directive1(ctx)
 		if err != nil {
 			return nil, err
 		}
 		if data, ok := tmp.(*int); ok {
 			arg1 = data
+		} else if tmp == nil {
+			arg1 = nil
 		} else {
 			return nil, fmt.Errorf(`unexpected type %T from directive, should be *int`, tmp)
 		}
 	}
 	args["arg2"] = arg1
+	var arg2 *string
+	if tmp, ok := rawArgs["arg3"]; ok {
+		directive0 := func(ctx context.Context) (interface{}, error) { return ec.unmarshalOString2ᚖstring(ctx, tmp) }
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.ToNull == nil {
+				return nil, errors.New("directive toNull is not implemented")
+			}
+			return ec.directives.ToNull(ctx, rawArgs, directive0)
+		}
+
+		tmp, err = directive1(ctx)
+		if err != nil {
+			return nil, err
+		}
+		if data, ok := tmp.(*string); ok {
+			arg2 = data
+		} else if tmp == nil {
+			arg2 = nil
+		} else {
+			return nil, fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp)
+		}
+	}
+	args["arg3"] = arg2
 	return args, nil
 }
 
@@ -1996,6 +2223,20 @@ func (ec *executionContext) field_Query_mapInput_args(ctx context.Context, rawAr
 		}
 	}
 	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_mapNestedStringInterface_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *NestedMapInput
+	if tmp, ok := rawArgs["in"]; ok {
+		arg0, err = ec.unmarshalONestedMapInput2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚐNestedMapInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["in"] = arg0
 	return args, nil
 }
 
@@ -2066,6 +2307,128 @@ func (ec *executionContext) field_Query_user_args(ctx context.Context, rawArgs m
 		}
 	}
 	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Subscription_directiveArg_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["arg"]; ok {
+		directive0 := func(ctx context.Context) (interface{}, error) { return ec.unmarshalNString2string(ctx, tmp) }
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			min, err := ec.unmarshalNInt2int(ctx, 1)
+			if err != nil {
+				return nil, err
+			}
+			max, err := ec.unmarshalOInt2ᚖint(ctx, 255)
+			if err != nil {
+				return nil, err
+			}
+			message, err := ec.unmarshalOString2ᚖstring(ctx, "invalid length")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Length == nil {
+				return nil, errors.New("directive length is not implemented")
+			}
+			return ec.directives.Length(ctx, rawArgs, directive0, min, max, message)
+		}
+
+		tmp, err = directive1(ctx)
+		if err != nil {
+			return nil, err
+		}
+		if data, ok := tmp.(string); ok {
+			arg0 = data
+		} else {
+			return nil, fmt.Errorf(`unexpected type %T from directive, should be string`, tmp)
+		}
+	}
+	args["arg"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Subscription_directiveNullableArg_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *int
+	if tmp, ok := rawArgs["arg"]; ok {
+		directive0 := func(ctx context.Context) (interface{}, error) { return ec.unmarshalOInt2ᚖint(ctx, tmp) }
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			min, err := ec.unmarshalOInt2ᚖint(ctx, 0)
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Range == nil {
+				return nil, errors.New("directive range is not implemented")
+			}
+			return ec.directives.Range(ctx, rawArgs, directive0, min, nil)
+		}
+
+		tmp, err = directive1(ctx)
+		if err != nil {
+			return nil, err
+		}
+		if data, ok := tmp.(*int); ok {
+			arg0 = data
+		} else if tmp == nil {
+			arg0 = nil
+		} else {
+			return nil, fmt.Errorf(`unexpected type %T from directive, should be *int`, tmp)
+		}
+	}
+	args["arg"] = arg0
+	var arg1 *int
+	if tmp, ok := rawArgs["arg2"]; ok {
+		directive0 := func(ctx context.Context) (interface{}, error) { return ec.unmarshalOInt2ᚖint(ctx, tmp) }
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			min, err := ec.unmarshalOInt2ᚖint(ctx, 0)
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Range == nil {
+				return nil, errors.New("directive range is not implemented")
+			}
+			return ec.directives.Range(ctx, rawArgs, directive0, min, nil)
+		}
+
+		tmp, err = directive1(ctx)
+		if err != nil {
+			return nil, err
+		}
+		if data, ok := tmp.(*int); ok {
+			arg1 = data
+		} else if tmp == nil {
+			arg1 = nil
+		} else {
+			return nil, fmt.Errorf(`unexpected type %T from directive, should be *int`, tmp)
+		}
+	}
+	args["arg2"] = arg1
+	var arg2 *string
+	if tmp, ok := rawArgs["arg3"]; ok {
+		directive0 := func(ctx context.Context) (interface{}, error) { return ec.unmarshalOString2ᚖstring(ctx, tmp) }
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.ToNull == nil {
+				return nil, errors.New("directive toNull is not implemented")
+			}
+			return ec.directives.ToNull(ctx, rawArgs, directive0)
+		}
+
+		tmp, err = directive1(ctx)
+		if err != nil {
+			return nil, err
+		}
+		if data, ok := tmp.(*string); ok {
+			arg2 = data
+		} else if tmp == nil {
+			arg2 = nil
+		} else {
+			return nil, fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp)
+		}
+	}
+	args["arg3"] = arg2
 	return args, nil
 }
 
@@ -2342,6 +2705,9 @@ func (ec *executionContext) _fieldMiddleware(ctx context.Context, obj interface{
 			}
 			n := next
 			next = func(ctx context.Context) (interface{}, error) {
+				if ec.directives.Logged == nil {
+					return nil, errors.New("directive logged is not implemented")
+				}
 				return ec.directives.Logged(ctx, obj, n, args["id"].(string))
 			}
 		}
@@ -3601,6 +3967,174 @@ func (ec *executionContext) _ModelMethods_withContext(ctx context.Context, field
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _ObjectDirectives_text(ctx context.Context, field graphql.CollectedField, obj *ObjectDirectives) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "ObjectDirectives",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec._fieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.Text, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			min, err := ec.unmarshalNInt2int(ctx, 0)
+			if err != nil {
+				return nil, err
+			}
+			max, err := ec.unmarshalOInt2ᚖint(ctx, 7)
+			if err != nil {
+				return nil, err
+			}
+			message, err := ec.unmarshalOString2ᚖstring(ctx, "not valid")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Length == nil {
+				return nil, errors.New("directive length is not implemented")
+			}
+			return ec.directives.Length(ctx, obj, directive0, min, max, message)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(string); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be string`, tmp)
+	})
+
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ObjectDirectives_nullableText(ctx context.Context, field graphql.CollectedField, obj *ObjectDirectives) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "ObjectDirectives",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec._fieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.NullableText, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.ToNull == nil {
+				return nil, errors.New("directive toNull is not implemented")
+			}
+			return ec.directives.ToNull(ctx, obj, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*string); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp)
+	})
+
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ObjectDirectivesWithCustomGoModel_nullableText(ctx context.Context, field graphql.CollectedField, obj *ObjectDirectivesWithCustomGoModel) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "ObjectDirectivesWithCustomGoModel",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec._fieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.NullableText, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.ToNull == nil {
+				return nil, errors.New("directive toNull is not implemented")
+			}
+			return ec.directives.ToNull(ctx, obj, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(string); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be string`, tmp)
+	})
+
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOString2string(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _OuterObject_inner(ctx context.Context, field graphql.CollectedField, obj *OuterObject) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
@@ -4298,37 +4832,6 @@ func (ec *executionContext) _Query_nestedOutputs(ctx context.Context, field grap
 	return ec.marshalOOuterObject2ᚕᚕᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚐOuterObject(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Query_shapes(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-		ec.Tracer.EndFieldExecution(ctx)
-	}()
-	rctx := &graphql.ResolverContext{
-		Object:   "Query",
-		Field:    field,
-		Args:     nil,
-		IsMethod: true,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp := ec._fieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Shapes(rctx)
-	})
-
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.([]Shape)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOShape2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚐShape(ctx, field.Selections, res)
-}
-
 func (ec *executionContext) _Query_modelMethods(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
@@ -4674,7 +5177,7 @@ func (ec *executionContext) _Query_directiveNullableArg(ctx context.Context, fie
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp := ec._fieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().DirectiveNullableArg(rctx, args["arg"].(*int), args["arg2"].(*int))
+		return ec.resolvers.Query().DirectiveNullableArg(rctx, args["arg"].(*int), args["arg2"].(*int), args["arg3"].(*string))
 	})
 
 	if resTmp == nil {
@@ -4800,6 +5303,68 @@ func (ec *executionContext) _Query_directiveInputType(ctx context.Context, field
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Query_directiveObject(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec._fieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().DirectiveObject(rctx)
+	})
+
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*ObjectDirectives)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOObjectDirectives2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚐObjectDirectives(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_directiveObjectWithCustomGoModel(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec._fieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().DirectiveObjectWithCustomGoModel(rctx)
+	})
+
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*ObjectDirectivesWithCustomGoModel)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOObjectDirectivesWithCustomGoModel2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚐObjectDirectivesWithCustomGoModel(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Query_directiveFieldDef(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
@@ -4838,11 +5403,18 @@ func (ec *executionContext) _Query_directiveFieldDef(ctx context.Context, field 
 			if err != nil {
 				return nil, err
 			}
+			if ec.directives.Length == nil {
+				return nil, errors.New("directive length is not implemented")
+			}
 			return ec.directives.Length(ctx, nil, directive0, min, nil, message)
 		}
+
 		tmp, err := directive1(rctx)
 		if err != nil {
 			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
 		}
 		if data, ok := tmp.(string); ok {
 			return data, nil
@@ -4893,6 +5465,196 @@ func (ec *executionContext) _Query_directiveField(ctx context.Context, field gra
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Query_directiveDouble(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec._fieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().DirectiveDouble(rctx)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.Directive1 == nil {
+				return nil, errors.New("directive directive1 is not implemented")
+			}
+			return ec.directives.Directive1(ctx, nil, directive0)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.Directive2 == nil {
+				return nil, errors.New("directive directive2 is not implemented")
+			}
+			return ec.directives.Directive2(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*string); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp)
+	})
+
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_directiveUnimplemented(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec._fieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().DirectiveUnimplemented(rctx)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.Unimplemented == nil {
+				return nil, errors.New("directive unimplemented is not implemented")
+			}
+			return ec.directives.Unimplemented(ctx, nil, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*string); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp)
+	})
+
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_shapes(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec._fieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Shapes(rctx)
+	})
+
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]Shape)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOShape2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚐShape(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_noShape(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec._fieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().NoShape(rctx)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.MakeNil == nil {
+				return nil, errors.New("directive makeNil is not implemented")
+			}
+			return ec.directives.MakeNil(ctx, nil, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(Shape); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be github.com/99designs/gqlgen/codegen/testserver.Shape`, tmp)
+	})
+
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(Shape)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOShape2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚐShape(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Query_mapStringInterface(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
@@ -4920,6 +5682,44 @@ func (ec *executionContext) _Query_mapStringInterface(ctx context.Context, field
 	resTmp := ec._fieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Query().MapStringInterface(rctx, args["in"].(map[string]interface{}))
+	})
+
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(map[string]interface{})
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOMapStringInterfaceType2map(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_mapNestedStringInterface(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_mapNestedStringInterface_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec._fieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().MapNestedStringInterface(rctx, args["in"].(*NestedMapInput))
 	})
 
 	if resTmp == nil {
@@ -5695,21 +6495,36 @@ func (ec *executionContext) _Slices_test4(ctx context.Context, field graphql.Col
 	return ec.marshalNString2ᚕstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Subscription_updated(ctx context.Context, field graphql.CollectedField) func() graphql.Marshaler {
-	ctx = graphql.WithResolverContext(ctx, &graphql.ResolverContext{
-		Field: field,
-		Args:  nil,
+func (ec *executionContext) _Subscription_updated(ctx context.Context, field graphql.CollectedField) (ret func() graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = nil
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Subscription",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec._fieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Subscription().Updated(rctx)
 	})
-	// FIXME: subscriptions are missing request middleware stack https://github.com/99designs/gqlgen/issues/259
-	//          and Tracer stack
-	rctx := ctx
-	results, err := ec.resolvers.Subscription().Updated(rctx)
-	if err != nil {
-		ec.Error(ctx, err)
+
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return nil
 	}
 	return func() graphql.Marshaler {
-		res, ok := <-results
+		res, ok := <-resTmp.(<-chan string)
 		if !ok {
 			return nil
 		}
@@ -5723,21 +6538,36 @@ func (ec *executionContext) _Subscription_updated(ctx context.Context, field gra
 	}
 }
 
-func (ec *executionContext) _Subscription_initPayload(ctx context.Context, field graphql.CollectedField) func() graphql.Marshaler {
-	ctx = graphql.WithResolverContext(ctx, &graphql.ResolverContext{
-		Field: field,
-		Args:  nil,
+func (ec *executionContext) _Subscription_initPayload(ctx context.Context, field graphql.CollectedField) (ret func() graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = nil
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Subscription",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec._fieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Subscription().InitPayload(rctx)
 	})
-	// FIXME: subscriptions are missing request middleware stack https://github.com/99designs/gqlgen/issues/259
-	//          and Tracer stack
-	rctx := ctx
-	results, err := ec.resolvers.Subscription().InitPayload(rctx)
-	if err != nil {
-		ec.Error(ctx, err)
+
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return nil
 	}
 	return func() graphql.Marshaler {
-		res, ok := <-results
+		res, ok := <-resTmp.(<-chan string)
 		if !ok {
 			return nil
 		}
@@ -5746,6 +6576,226 @@ func (ec *executionContext) _Subscription_initPayload(ctx context.Context, field
 			graphql.MarshalString(field.Alias).MarshalGQL(w)
 			w.Write([]byte{':'})
 			ec.marshalNString2string(ctx, field.Selections, res).MarshalGQL(w)
+			w.Write([]byte{'}'})
+		})
+	}
+}
+
+func (ec *executionContext) _Subscription_directiveArg(ctx context.Context, field graphql.CollectedField) (ret func() graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = nil
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Subscription",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Subscription_directiveArg_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return nil
+	}
+	rctx.Args = args
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec._fieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Subscription().DirectiveArg(rctx, args["arg"].(string))
+	})
+
+	if resTmp == nil {
+		return nil
+	}
+	return func() graphql.Marshaler {
+		res, ok := <-resTmp.(<-chan *string)
+		if !ok {
+			return nil
+		}
+		return graphql.WriterFunc(func(w io.Writer) {
+			w.Write([]byte{'{'})
+			graphql.MarshalString(field.Alias).MarshalGQL(w)
+			w.Write([]byte{':'})
+			ec.marshalOString2ᚖstring(ctx, field.Selections, res).MarshalGQL(w)
+			w.Write([]byte{'}'})
+		})
+	}
+}
+
+func (ec *executionContext) _Subscription_directiveNullableArg(ctx context.Context, field graphql.CollectedField) (ret func() graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = nil
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Subscription",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Subscription_directiveNullableArg_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return nil
+	}
+	rctx.Args = args
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec._fieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Subscription().DirectiveNullableArg(rctx, args["arg"].(*int), args["arg2"].(*int), args["arg3"].(*string))
+	})
+
+	if resTmp == nil {
+		return nil
+	}
+	return func() graphql.Marshaler {
+		res, ok := <-resTmp.(<-chan *string)
+		if !ok {
+			return nil
+		}
+		return graphql.WriterFunc(func(w io.Writer) {
+			w.Write([]byte{'{'})
+			graphql.MarshalString(field.Alias).MarshalGQL(w)
+			w.Write([]byte{':'})
+			ec.marshalOString2ᚖstring(ctx, field.Selections, res).MarshalGQL(w)
+			w.Write([]byte{'}'})
+		})
+	}
+}
+
+func (ec *executionContext) _Subscription_directiveDouble(ctx context.Context, field graphql.CollectedField) (ret func() graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = nil
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Subscription",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec._fieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Subscription().DirectiveDouble(rctx)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.Directive1 == nil {
+				return nil, errors.New("directive directive1 is not implemented")
+			}
+			return ec.directives.Directive1(ctx, nil, directive0)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.Directive2 == nil {
+				return nil, errors.New("directive directive2 is not implemented")
+			}
+			return ec.directives.Directive2(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(<-chan *string); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be <-chan *string`, tmp)
+	})
+
+	if resTmp == nil {
+		return nil
+	}
+	return func() graphql.Marshaler {
+		res, ok := <-resTmp.(<-chan *string)
+		if !ok {
+			return nil
+		}
+		return graphql.WriterFunc(func(w io.Writer) {
+			w.Write([]byte{'{'})
+			graphql.MarshalString(field.Alias).MarshalGQL(w)
+			w.Write([]byte{':'})
+			ec.marshalOString2ᚖstring(ctx, field.Selections, res).MarshalGQL(w)
+			w.Write([]byte{'}'})
+		})
+	}
+}
+
+func (ec *executionContext) _Subscription_directiveUnimplemented(ctx context.Context, field graphql.CollectedField) (ret func() graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = nil
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Subscription",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec._fieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Subscription().DirectiveUnimplemented(rctx)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.Unimplemented == nil {
+				return nil, errors.New("directive unimplemented is not implemented")
+			}
+			return ec.directives.Unimplemented(ctx, nil, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(<-chan *string); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be <-chan *string`, tmp)
+	})
+
+	if resTmp == nil {
+		return nil
+	}
+	return func() graphql.Marshaler {
+		res, ok := <-resTmp.(<-chan *string)
+		if !ok {
+			return nil
+		}
+		return graphql.WriterFunc(func(w io.Writer) {
+			w.Write([]byte{'{'})
+			graphql.MarshalString(field.Alias).MarshalGQL(w)
+			w.Write([]byte{':'})
+			ec.marshalOString2ᚖstring(ctx, field.Selections, res).MarshalGQL(w)
 			w.Write([]byte{'}'})
 		})
 	}
@@ -7277,8 +8327,12 @@ func (ec *executionContext) unmarshalInputInnerDirectives(ctx context.Context, o
 				if err != nil {
 					return nil, err
 				}
+				if ec.directives.Length == nil {
+					return nil, errors.New("directive length is not implemented")
+				}
 				return ec.directives.Length(ctx, obj, directive0, min, nil, message)
 			}
+
 			tmp, err := directive1(ctx)
 			if err != nil {
 				return it, err
@@ -7334,8 +8388,12 @@ func (ec *executionContext) unmarshalInputInputDirectives(ctx context.Context, o
 				if err != nil {
 					return nil, err
 				}
+				if ec.directives.Length == nil {
+					return nil, errors.New("directive length is not implemented")
+				}
 				return ec.directives.Length(ctx, obj, directive0, min, max, message)
 			}
+
 			tmp, err := directive1(ctx)
 			if err != nil {
 				return it, err
@@ -7344,6 +8402,27 @@ func (ec *executionContext) unmarshalInputInputDirectives(ctx context.Context, o
 				it.Text = data
 			} else {
 				return it, fmt.Errorf(`unexpected type %T from directive, should be string`, tmp)
+			}
+		case "nullableText":
+			var err error
+			directive0 := func(ctx context.Context) (interface{}, error) { return ec.unmarshalOString2ᚖstring(ctx, v) }
+			directive1 := func(ctx context.Context) (interface{}, error) {
+				if ec.directives.ToNull == nil {
+					return nil, errors.New("directive toNull is not implemented")
+				}
+				return ec.directives.ToNull(ctx, obj, directive0)
+			}
+
+			tmp, err := directive1(ctx)
+			if err != nil {
+				return it, err
+			}
+			if data, ok := tmp.(*string); ok {
+				it.NullableText = data
+			} else if tmp == nil {
+				it.NullableText = nil
+			} else {
+				return it, fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp)
 			}
 		case "inner":
 			var err error
@@ -7371,16 +8450,40 @@ func (ec *executionContext) unmarshalInputInputDirectives(ctx context.Context, o
 				if err != nil {
 					return nil, err
 				}
+				if ec.directives.Length == nil {
+					return nil, errors.New("directive length is not implemented")
+				}
 				return ec.directives.Length(ctx, obj, directive0, min, max, nil)
 			}
+
 			tmp, err := directive1(ctx)
 			if err != nil {
 				return it, err
 			}
 			if data, ok := tmp.(*ThirdParty); ok {
 				it.ThirdParty = data
+			} else if tmp == nil {
+				it.ThirdParty = nil
 			} else {
 				return it, fmt.Errorf(`unexpected type %T from directive, should be *github.com/99designs/gqlgen/codegen/testserver.ThirdParty`, tmp)
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputNestedMapInput(ctx context.Context, obj interface{}) (NestedMapInput, error) {
+	var it NestedMapInput
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "map":
+			var err error
+			it.Map, err = ec.unmarshalOMapStringInterfaceInput2map(ctx, v)
+			if err != nil {
+				return it, err
 			}
 		}
 	}
@@ -7596,8 +8699,8 @@ func (ec *executionContext) unmarshalInputValidInput(ctx context.Context, obj in
 
 // region    ************************** interface.gotpl ***************************
 
-func (ec *executionContext) _Content_Child(ctx context.Context, sel ast.SelectionSet, obj *ContentChild) graphql.Marshaler {
-	switch obj := (*obj).(type) {
+func (ec *executionContext) _Content_Child(ctx context.Context, sel ast.SelectionSet, obj ContentChild) graphql.Marshaler {
+	switch obj := (obj).(type) {
 	case nil:
 		return graphql.Null
 	case ContentUser:
@@ -7613,8 +8716,8 @@ func (ec *executionContext) _Content_Child(ctx context.Context, sel ast.Selectio
 	}
 }
 
-func (ec *executionContext) _Shape(ctx context.Context, sel ast.SelectionSet, obj *Shape) graphql.Marshaler {
-	switch obj := (*obj).(type) {
+func (ec *executionContext) _Shape(ctx context.Context, sel ast.SelectionSet, obj Shape) graphql.Marshaler {
+	switch obj := (obj).(type) {
 	case nil:
 		return graphql.Null
 	case *Circle:
@@ -7626,8 +8729,8 @@ func (ec *executionContext) _Shape(ctx context.Context, sel ast.SelectionSet, ob
 	}
 }
 
-func (ec *executionContext) _ShapeUnion(ctx context.Context, sel ast.SelectionSet, obj *ShapeUnion) graphql.Marshaler {
-	switch obj := (*obj).(type) {
+func (ec *executionContext) _ShapeUnion(ctx context.Context, sel ast.SelectionSet, obj ShapeUnion) graphql.Marshaler {
+	switch obj := (obj).(type) {
 	case nil:
 		return graphql.Null
 	case *Circle:
@@ -7639,8 +8742,8 @@ func (ec *executionContext) _ShapeUnion(ctx context.Context, sel ast.SelectionSe
 	}
 }
 
-func (ec *executionContext) _TestUnion(ctx context.Context, sel ast.SelectionSet, obj *TestUnion) graphql.Marshaler {
-	switch obj := (*obj).(type) {
+func (ec *executionContext) _TestUnion(ctx context.Context, sel ast.SelectionSet, obj TestUnion) graphql.Marshaler {
+	switch obj := (obj).(type) {
 	case nil:
 		return graphql.Null
 	case A:
@@ -8346,6 +9449,59 @@ func (ec *executionContext) _ModelMethods(ctx context.Context, sel ast.Selection
 	return out
 }
 
+var objectDirectivesImplementors = []string{"ObjectDirectives"}
+
+func (ec *executionContext) _ObjectDirectives(ctx context.Context, sel ast.SelectionSet, obj *ObjectDirectives) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.RequestContext, sel, objectDirectivesImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ObjectDirectives")
+		case "text":
+			out.Values[i] = ec._ObjectDirectives_text(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "nullableText":
+			out.Values[i] = ec._ObjectDirectives_nullableText(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var objectDirectivesWithCustomGoModelImplementors = []string{"ObjectDirectivesWithCustomGoModel"}
+
+func (ec *executionContext) _ObjectDirectivesWithCustomGoModel(ctx context.Context, sel ast.SelectionSet, obj *ObjectDirectivesWithCustomGoModel) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.RequestContext, sel, objectDirectivesWithCustomGoModelImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ObjectDirectivesWithCustomGoModel")
+		case "nullableText":
+			out.Values[i] = ec._ObjectDirectivesWithCustomGoModel_nullableText(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var outerObjectImplementors = []string{"OuterObject"}
 
 func (ec *executionContext) _OuterObject(ctx context.Context, sel ast.SelectionSet, obj *OuterObject) graphql.Marshaler {
@@ -8670,17 +9826,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				res = ec._Query_nestedOutputs(ctx, field)
 				return res
 			})
-		case "shapes":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_shapes(ctx, field)
-				return res
-			})
 		case "modelMethods":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -8836,6 +9981,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				res = ec._Query_directiveInputType(ctx, field)
 				return res
 			})
+		case "directiveObject":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_directiveObject(ctx, field)
+				return res
+			})
+		case "directiveObjectWithCustomGoModel":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_directiveObjectWithCustomGoModel(ctx, field)
+				return res
+			})
 		case "directiveFieldDef":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -8861,6 +10028,50 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				res = ec._Query_directiveField(ctx, field)
 				return res
 			})
+		case "directiveDouble":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_directiveDouble(ctx, field)
+				return res
+			})
+		case "directiveUnimplemented":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_directiveUnimplemented(ctx, field)
+				return res
+			})
+		case "shapes":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_shapes(ctx, field)
+				return res
+			})
+		case "noShape":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_noShape(ctx, field)
+				return res
+			})
 		case "mapStringInterface":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -8870,6 +10081,17 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_mapStringInterface(ctx, field)
+				return res
+			})
+		case "mapNestedStringInterface":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_mapNestedStringInterface(ctx, field)
 				return res
 			})
 		case "errorBubble":
@@ -9146,6 +10368,14 @@ func (ec *executionContext) _Subscription(ctx context.Context, sel ast.Selection
 		return ec._Subscription_updated(ctx, fields[0])
 	case "initPayload":
 		return ec._Subscription_initPayload(ctx, fields[0])
+	case "directiveArg":
+		return ec._Subscription_directiveArg(ctx, fields[0])
+	case "directiveNullableArg":
+		return ec._Subscription_directiveNullableArg(ctx, fields[0])
+	case "directiveDouble":
+		return ec._Subscription_directiveDouble(ctx, fields[0])
+	case "directiveUnimplemented":
+		return ec._Subscription_directiveUnimplemented(ctx, fields[0])
 	default:
 		panic("unknown field " + strconv.Quote(fields[0].Name))
 	}
@@ -9957,7 +11187,13 @@ func (ec *executionContext) unmarshalNRecursiveInputSlice2githubᚗcomᚋ99desig
 }
 
 func (ec *executionContext) marshalNShapeUnion2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚐShapeUnion(ctx context.Context, sel ast.SelectionSet, v ShapeUnion) graphql.Marshaler {
-	return ec._ShapeUnion(ctx, sel, &v)
+	if v == nil {
+		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._ShapeUnion(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
@@ -10583,6 +11819,40 @@ func (ec *executionContext) marshalOModelMethods2ᚖgithubᚗcomᚋ99designsᚋg
 	return ec._ModelMethods(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalONestedMapInput2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚐNestedMapInput(ctx context.Context, v interface{}) (NestedMapInput, error) {
+	return ec.unmarshalInputNestedMapInput(ctx, v)
+}
+
+func (ec *executionContext) unmarshalONestedMapInput2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚐNestedMapInput(ctx context.Context, v interface{}) (*NestedMapInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalONestedMapInput2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚐNestedMapInput(ctx, v)
+	return &res, err
+}
+
+func (ec *executionContext) marshalOObjectDirectives2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚐObjectDirectives(ctx context.Context, sel ast.SelectionSet, v ObjectDirectives) graphql.Marshaler {
+	return ec._ObjectDirectives(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalOObjectDirectives2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚐObjectDirectives(ctx context.Context, sel ast.SelectionSet, v *ObjectDirectives) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._ObjectDirectives(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOObjectDirectivesWithCustomGoModel2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚐObjectDirectivesWithCustomGoModel(ctx context.Context, sel ast.SelectionSet, v ObjectDirectivesWithCustomGoModel) graphql.Marshaler {
+	return ec._ObjectDirectivesWithCustomGoModel(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalOObjectDirectivesWithCustomGoModel2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚐObjectDirectivesWithCustomGoModel(ctx context.Context, sel ast.SelectionSet, v *ObjectDirectivesWithCustomGoModel) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._ObjectDirectivesWithCustomGoModel(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalOOuterInput2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚐOuterInput(ctx context.Context, v interface{}) (OuterInput, error) {
 	return ec.unmarshalInputOuterInput(ctx, v)
 }
@@ -10781,7 +12051,10 @@ func (ec *executionContext) unmarshalORecursiveInputSlice2ᚖgithubᚗcomᚋ99de
 }
 
 func (ec *executionContext) marshalOShape2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚐShape(ctx context.Context, sel ast.SelectionSet, v Shape) graphql.Marshaler {
-	return ec._Shape(ctx, sel, &v)
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Shape(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOShape2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚐShape(ctx context.Context, sel ast.SelectionSet, v []Shape) graphql.Marshaler {
@@ -10923,7 +12196,10 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 }
 
 func (ec *executionContext) marshalOTestUnion2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚐTestUnion(ctx context.Context, sel ast.SelectionSet, v TestUnion) graphql.Marshaler {
-	return ec._TestUnion(ctx, sel, &v)
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._TestUnion(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOThirdParty2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚐThirdParty(ctx context.Context, v interface{}) (ThirdParty, error) {

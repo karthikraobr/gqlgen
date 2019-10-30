@@ -95,14 +95,17 @@ func (c *wsConnection) init() bool {
 		}
 
 		if c.cfg.websocketInitFunc != nil {
-			if err := c.cfg.websocketInitFunc(c.ctx, c.initPayload); err != nil {
+			ctx, err := c.cfg.websocketInitFunc(c.ctx, c.initPayload)
+			if err != nil {
 				c.sendConnectionError(err.Error())
 				c.close(websocket.CloseNormalClosure, "terminated")
 				return false
 			}
+			c.ctx = ctx
 		}
 
 		c.write(&operationMessage{Type: connectionAckMsg})
+		c.write(&operationMessage{Type: connectionKeepAliveMsg})
 	case connectionTerminateMsg:
 		c.close(websocket.CloseNormalClosure, "terminated")
 		return false
@@ -221,7 +224,11 @@ func (c *wsConnection) subscribe(message *operationMessage) bool {
 		c.sendError(message.ID, err)
 		return true
 	}
-	reqCtx := c.cfg.newRequestContext(c.exec, doc, op, reqParams.Query, vars)
+	reqCtx, err2 := c.cfg.newRequestContext(c.ctx, c.exec, doc, op, reqParams.OperationName, reqParams.Query, vars)
+	if err2 != nil {
+		c.sendError(message.ID, gqlerror.Errorf(err2.Error()))
+		return true
+	}
 	ctx := graphql.WithRequestContext(c.ctx, reqCtx)
 
 	if c.initPayload != nil {
@@ -279,9 +286,9 @@ func (c *wsConnection) sendData(id string, response *graphql.Response) {
 }
 
 func (c *wsConnection) sendError(id string, errors ...*gqlerror.Error) {
-	var errs []error
-	for _, err := range errors {
-		errs = append(errs, err)
+	errs := make([]error, len(errors))
+	for i, err := range errors {
+		errs[i] = err
 	}
 	b, err := json.Marshal(errs)
 	if err != nil {

@@ -8,6 +8,10 @@ import (
 	"strconv"
 )
 
+type FooBarer interface {
+	IsFooBarer()
+}
+
 // InterfaceWithDescription is an interface with a description
 type InterfaceWithDescription interface {
 	IsInterfaceWithDescription()
@@ -27,16 +31,16 @@ type UnionWithDescription interface {
 }
 
 type MissingInput struct {
-	Name *string      `json:"name"`
-	Enum *MissingEnum `json:"enum"`
+	Name *string      `json:"name" database:"MissingInputname"`
+	Enum *MissingEnum `json:"enum" database:"MissingInputenum"`
 }
 
 type MissingTypeNotNull struct {
-	Name     string               `json:"name"`
-	Enum     MissingEnum          `json:"enum"`
-	Int      MissingInterface     `json:"int"`
-	Existing *ExistingType        `json:"existing"`
-	Missing2 *MissingTypeNullable `json:"missing2"`
+	Name     string               `json:"name" database:"MissingTypeNotNullname"`
+	Enum     MissingEnum          `json:"enum" database:"MissingTypeNotNullenum"`
+	Int      MissingInterface     `json:"int" database:"MissingTypeNotNullint"`
+	Existing *ExistingType        `json:"existing" database:"MissingTypeNotNullexisting"`
+	Missing2 *MissingTypeNullable `json:"missing2" database:"MissingTypeNotNullmissing2"`
 }
 
 func (MissingTypeNotNull) IsMissingInterface()  {}
@@ -45,11 +49,11 @@ func (MissingTypeNotNull) IsMissingUnion()      {}
 func (MissingTypeNotNull) IsExistingUnion()     {}
 
 type MissingTypeNullable struct {
-	Name     *string             `json:"name"`
-	Enum     *MissingEnum        `json:"enum"`
-	Int      MissingInterface    `json:"int"`
-	Existing *ExistingType       `json:"existing"`
-	Missing2 *MissingTypeNotNull `json:"missing2"`
+	Name     *string             `json:"name" database:"MissingTypeNullablename"`
+	Enum     *MissingEnum        `json:"enum" database:"MissingTypeNullableenum"`
+	Int      MissingInterface    `json:"int" database:"MissingTypeNullableint"`
+	Existing *ExistingType       `json:"existing" database:"MissingTypeNullableexisting"`
+	Missing2 *MissingTypeNotNull `json:"missing2" database:"MissingTypeNullablemissing2"`
 }
 
 func (MissingTypeNullable) IsMissingInterface()  {}
@@ -59,10 +63,16 @@ func (MissingTypeNullable) IsExistingUnion()     {}
 
 // TypeWithDescription is a type with a description
 type TypeWithDescription struct {
-	Name *string `json:"name"`
+	Name *string `json:"name" database:"TypeWithDescriptionname"`
 }
 
 func (TypeWithDescription) IsUnionWithDescription() {}
+
+type FooBarr struct {
+	Name string `json:"name" database:"_Foo_Barrname"`
+}
+
+func (FooBarr) IsFooBarer() {}
 
 // EnumWithDescription is an enum with a description
 type EnumWithDescription string

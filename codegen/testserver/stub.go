@@ -10,6 +10,9 @@ import (
 )
 
 type Stub struct {
+	BackedByInterfaceResolver struct {
+		ID func(ctx context.Context, obj BackedByInterface) (string, error)
+	}
 	ErrorsResolver struct {
 		A func(ctx context.Context, obj *Errors) (*Error, error)
 		B func(ctx context.Context, obj *Errors) (*Error, error)
@@ -63,8 +66,17 @@ type Stub struct {
 		DirectiveField                   func(ctx context.Context) (*string, error)
 		DirectiveDouble                  func(ctx context.Context) (*string, error)
 		DirectiveUnimplemented           func(ctx context.Context) (*string, error)
+		EmbeddedCase1                    func(ctx context.Context) (*EmbeddedCase1, error)
+		EmbeddedCase2                    func(ctx context.Context) (*EmbeddedCase2, error)
+		EmbeddedCase3                    func(ctx context.Context) (*EmbeddedCase3, error)
+		EnumInInput                      func(ctx context.Context, input *InputWithEnumValue) (EnumTest, error)
 		Shapes                           func(ctx context.Context) ([]Shape, error)
 		NoShape                          func(ctx context.Context) (Shape, error)
+		Node                             func(ctx context.Context) (Node, error)
+		NoShapeTypedNil                  func(ctx context.Context) (Shape, error)
+		Animal                           func(ctx context.Context) (Animal, error)
+		NotAnInterface                   func(ctx context.Context) (BackedByInterface, error)
+		Issue896a                        func(ctx context.Context) ([]*CheckIssue896, error)
 		MapStringInterface               func(ctx context.Context, in map[string]interface{}) (map[string]interface{}, error)
 		MapNestedStringInterface         func(ctx context.Context, in *NestedMapInput) (map[string]interface{}, error)
 		ErrorBubble                      func(ctx context.Context) (*Error, error)
@@ -89,12 +101,16 @@ type Stub struct {
 		DirectiveNullableArg   func(ctx context.Context, arg *int, arg2 *int, arg3 *string) (<-chan *string, error)
 		DirectiveDouble        func(ctx context.Context) (<-chan *string, error)
 		DirectiveUnimplemented func(ctx context.Context) (<-chan *string, error)
+		Issue896b              func(ctx context.Context) (<-chan []*CheckIssue896, error)
 	}
 	UserResolver struct {
 		Friends func(ctx context.Context, obj *User) ([]*User, error)
 	}
 }
 
+func (r *Stub) BackedByInterface() BackedByInterfaceResolver {
+	return &stubBackedByInterface{r}
+}
 func (r *Stub) Errors() ErrorsResolver {
 	return &stubErrors{r}
 }
@@ -124,6 +140,12 @@ func (r *Stub) Subscription() SubscriptionResolver {
 }
 func (r *Stub) User() UserResolver {
 	return &stubUser{r}
+}
+
+type stubBackedByInterface struct{ *Stub }
+
+func (r *stubBackedByInterface) ID(ctx context.Context, obj BackedByInterface) (string, error) {
+	return r.BackedByInterfaceResolver.ID(ctx, obj)
 }
 
 type stubErrors struct{ *Stub }
@@ -263,11 +285,38 @@ func (r *stubQuery) DirectiveDouble(ctx context.Context) (*string, error) {
 func (r *stubQuery) DirectiveUnimplemented(ctx context.Context) (*string, error) {
 	return r.QueryResolver.DirectiveUnimplemented(ctx)
 }
+func (r *stubQuery) EmbeddedCase1(ctx context.Context) (*EmbeddedCase1, error) {
+	return r.QueryResolver.EmbeddedCase1(ctx)
+}
+func (r *stubQuery) EmbeddedCase2(ctx context.Context) (*EmbeddedCase2, error) {
+	return r.QueryResolver.EmbeddedCase2(ctx)
+}
+func (r *stubQuery) EmbeddedCase3(ctx context.Context) (*EmbeddedCase3, error) {
+	return r.QueryResolver.EmbeddedCase3(ctx)
+}
+func (r *stubQuery) EnumInInput(ctx context.Context, input *InputWithEnumValue) (EnumTest, error) {
+	return r.QueryResolver.EnumInInput(ctx, input)
+}
 func (r *stubQuery) Shapes(ctx context.Context) ([]Shape, error) {
 	return r.QueryResolver.Shapes(ctx)
 }
 func (r *stubQuery) NoShape(ctx context.Context) (Shape, error) {
 	return r.QueryResolver.NoShape(ctx)
+}
+func (r *stubQuery) Node(ctx context.Context) (Node, error) {
+	return r.QueryResolver.Node(ctx)
+}
+func (r *stubQuery) NoShapeTypedNil(ctx context.Context) (Shape, error) {
+	return r.QueryResolver.NoShapeTypedNil(ctx)
+}
+func (r *stubQuery) Animal(ctx context.Context) (Animal, error) {
+	return r.QueryResolver.Animal(ctx)
+}
+func (r *stubQuery) NotAnInterface(ctx context.Context) (BackedByInterface, error) {
+	return r.QueryResolver.NotAnInterface(ctx)
+}
+func (r *stubQuery) Issue896a(ctx context.Context) ([]*CheckIssue896, error) {
+	return r.QueryResolver.Issue896a(ctx)
 }
 func (r *stubQuery) MapStringInterface(ctx context.Context, in map[string]interface{}) (map[string]interface{}, error) {
 	return r.QueryResolver.MapStringInterface(ctx, in)
@@ -337,6 +386,9 @@ func (r *stubSubscription) DirectiveDouble(ctx context.Context) (<-chan *string,
 }
 func (r *stubSubscription) DirectiveUnimplemented(ctx context.Context) (<-chan *string, error) {
 	return r.SubscriptionResolver.DirectiveUnimplemented(ctx)
+}
+func (r *stubSubscription) Issue896b(ctx context.Context) (<-chan []*CheckIssue896, error) {
+	return r.SubscriptionResolver.Issue896b(ctx)
 }
 
 type stubUser struct{ *Stub }

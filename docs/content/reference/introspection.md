@@ -2,7 +2,7 @@
 title: 'Disabling introspection'
 description: Prevent users from introspecting schemas in production.
 linkTitle: Introspection
-menu: { main: { parent: 'reference' } }
+menu: { main: { parent: 'reference', weight: 10 } }
 ---
 
 One of the best features of GraphQL is it's powerful discoverability, but sometimes you don't want to allow others to explore your endpoint.
@@ -30,7 +30,7 @@ srv := httptest.NewServer(
 		NewExecutableSchema(Config{Resolvers: resolvers}),
 		handler.RequestMiddleware(func(ctx context.Context, next func(ctx context.Context) []byte) []byte {
 			if !userForContext(ctx).IsAdmin {
-				graphql.GetRequestContext(ctx).DisableIntrospection = true
+				graphql.GetOperationContext(ctx).DisableIntrospection = true
 			}
 
 			return next(ctx)

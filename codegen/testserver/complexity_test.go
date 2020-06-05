@@ -5,14 +5,17 @@ import (
 	"testing"
 
 	"github.com/99designs/gqlgen/client"
-	"github.com/99designs/gqlgen/handler"
+	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/stretchr/testify/require"
 )
 
 func TestComplexityCollisions(t *testing.T) {
 	resolvers := &Stub{}
 
-	c := client.New(handler.GraphQL(NewExecutableSchema(Config{Resolvers: resolvers})))
+	srv := handler.NewDefaultServer(NewExecutableSchema(Config{Resolvers: resolvers}))
+
+	c := client.New(srv)
 
 	resolvers.QueryResolver.Overlapping = func(ctx context.Context) (fields *OverlappingFields, e error) {
 		return &OverlappingFields{
@@ -48,7 +51,9 @@ func TestComplexityFuncs(t *testing.T) {
 	cfg.Complexity.OverlappingFields.Foo = func(childComplexity int) int { return 1000 }
 	cfg.Complexity.OverlappingFields.NewFoo = func(childComplexity int) int { return 5 }
 
-	c := client.New(handler.GraphQL(NewExecutableSchema(cfg), handler.ComplexityLimit(10)))
+	srv := handler.NewDefaultServer(NewExecutableSchema(cfg))
+	srv.Use(extension.FixedComplexityLimit(10))
+	c := client.New(srv)
 
 	resolvers.QueryResolver.Overlapping = func(ctx context.Context) (fields *OverlappingFields, e error) {
 		return &OverlappingFields{
@@ -69,7 +74,7 @@ func TestComplexityFuncs(t *testing.T) {
 		}
 		err := c.Post(`query { overlapping { oneFoo, twoFoo, oldFoo, newFoo, new_foo } }`, &resp)
 
-		require.EqualError(t, err, `http 422: {"errors":[{"message":"operation has complexity 2012, which exceeds the limit of 10"}],"data":null}`)
+		require.EqualError(t, err, `[{"message":"operation has complexity 2012, which exceeds the limit of 10","extensions":{"code":"COMPLEXITY_LIMIT_EXCEEDED"}}]`)
 		require.False(t, ran)
 	})
 
@@ -108,7 +113,7 @@ func TestComplexityFuncs(t *testing.T) {
 			c: overlapping { newFoo },
 		}`, &resp)
 
-		require.EqualError(t, err, `http 422: {"errors":[{"message":"operation has complexity 18, which exceeds the limit of 10"}],"data":null}`)
+		require.EqualError(t, err, `[{"message":"operation has complexity 18, which exceeds the limit of 10","extensions":{"code":"COMPLEXITY_LIMIT_EXCEEDED"}}]`)
 		require.False(t, ran)
 	})
 }

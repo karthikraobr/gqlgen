@@ -5,13 +5,13 @@ import (
 
 	"github.com/99designs/gqlgen/client"
 	"github.com/99designs/gqlgen/example/starwars/generated"
+	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/introspection"
-	"github.com/99designs/gqlgen/handler"
 	"github.com/stretchr/testify/require"
 )
 
 func TestStarwars(t *testing.T) {
-	c := client.New(handler.GraphQL(generated.NewExecutableSchema(NewResolver())))
+	c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(NewResolver())))
 
 	t.Run("Lukes starships", func(t *testing.T) {
 		var resp struct {
@@ -214,7 +214,7 @@ func TestStarwars(t *testing.T) {
 		  }
 		}`, &resp, client.Var("episode", "INVALID"))
 
-		require.EqualError(t, err, `[{"message":"INVALID is not a valid Episode","path":["createReview"]}]`)
+		require.EqualError(t, err, `http 422: {"errors":[{"message":"INVALID is not a valid Episode","path":["variable","episode"],"extensions":{"code":"GRAPHQL_VALIDATION_FAILED"}}],"data":null}`)
 	})
 
 	t.Run("introspection", func(t *testing.T) {
